@@ -13,19 +13,23 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import web.controller.ArticleController;
 import web.util.DBUtil;
 import web.util.SecSql;
 
-/**
- * Servlet implementation class ArticleListServlet
- */
-@WebServlet("/article/temp/list")
-public class ArticleListServlet extends HttpServlet {
+@WebServlet(urlPatterns={"/article/*", "/member/*"})
+public class DispatcherServlet extends HttpServlet {
 
-	protected void doGet(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
 		response.setContentType("text/html;charset=UTF-8");
 		// TODO Auto-generated method stub
+		
+		String requestUri = request.getRequestURI();
+		String[] requestUriBits = requestUri.split("/");
+		
+		String controllerName = requestUriBits[2];
+		String actionMethod = requestUriBits[3];
 
 		String url = "jdbc:mysql://localhost:3306/java_servlet?serverTimezone=Asia/Seoul&useOldAliasMetadataBehavior=true&zeroDateTimeBehavior=convertToNull";
 		String user = "root";
@@ -48,45 +52,32 @@ public class ArticleListServlet extends HttpServlet {
 			
 			HttpSession session = request.getSession();
 			
+			boolean isLogined = false;
 			int loginedMemberId = -1;
+			Map<String, Object> memberRow = null;
 
 			if (session.getAttribute("loginedMemberId") != null) {
 				loginedMemberId = (int) session.getAttribute("loginedMemberId");
+				isLogined = true;
+				
+				SecSql memberSql = new SecSql();
+				
+				memberSql.append("SELECT * FROM member WHERE id = ?", loginedMemberId);
+				memberRow = DBUtil.selectRow(con, memberSql);
 			}
 			
-			SecSql memberSql = new SecSql();
-			
-			memberSql.append("SELECT * FROM member WHERE id = ?", loginedMemberId);
-			Map<String, Object> memberRow = DBUtil.selectRow(con, memberSql);
-			
+			request.setAttribute("isLogined", isLogined);
+			request.setAttribute("loginedMemberId",loginedMemberId);
 			request.setAttribute("memberRow", memberRow);
-
-			SecSql sql = new SecSql();
-
-			sql.append("SELECT COUNT(*) FROM article");
-			int totalPageCnt = (int) DBUtil.selectRowIntValue(con, sql);
 			
-			int page = 1;
-			int countInPage = 10;
-			
-			totalPageCnt = (int) Math.ceil((double)totalPageCnt / countInPage);
-			
-			if (request.getParameter("page") != null) {
-				page = Integer.parseInt(request.getParameter("page"));
+			if(controllerName.equals("article")) {
+				ArticleController controller = new ArticleController(request, response, con);
+				
+				if(actionMethod.equals("list")) {
+					controller.actionList();
+				}
 			}
-			
-			int startPage = (page - 1) * countInPage;
-			
-			SecSql articleSql = new SecSql();
-			
-			articleSql.append("SELECT * FROM article LIMIT ?, ?", startPage, countInPage);
-			List<Map<String, Object>> articleRows = DBUtil.selectRows(con, articleSql);
-			
-			request.setAttribute("totalPageCnt", totalPageCnt);
-			request.setAttribute("page", page);
-			request.setAttribute("articleRows", articleRows);
-			
-			request.getRequestDispatcher("/jsp/article/list.jsp").forward(request, response);
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
@@ -98,6 +89,12 @@ public class ArticleListServlet extends HttpServlet {
 				}
 			}
 		}
+		
+	}
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		doGet(request, response);
 	}
 
 }

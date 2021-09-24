@@ -1,10 +1,12 @@
 <%@ page import="java.util.List"%>
 <%@ page import="java.util.Map"%>
+<%@ page import="web.dto.Article"%>
 <%
-List<Map<String, Object>> articleRows = (List<Map<String, Object>>) request.getAttribute("articleRows");
+List<Article> articles = (List<Article>) request.getAttribute("articles");
 Map<String, Object> loginedMemberRow = (Map<String, Object>) request.getAttribute("memberRow");
 int totalPageCnt = (int) request.getAttribute("totalPageCnt");
 int nowPage = (int) request.getAttribute("page");
+boolean isLogined = (boolean) request.getAttribute("isLogined");
 %>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
@@ -19,7 +21,7 @@ int nowPage = (int) request.getAttribute("page");
 	<div class="header"
 		style="margin: 20px auto; border: 1px solid black; display: inline-block;">
 		<%
-		if (loginedMemberRow.isEmpty()) {
+		if (!isLogined) {
 		%>
 		<div>
 			<a href="../member/login">로그인</a> <a href="../member/join">회원가입</a>
@@ -46,15 +48,15 @@ int nowPage = (int) request.getAttribute("page");
 			<th>비고</th>
 		</tr>
 		<%
-		for (Map<String, Object> articleRow : articleRows) {
+		for (Article article : articles) {
 		%>
 		<tr>
-			<td><%=(int) articleRow.get("id")%>번</td>
-			<td><%=(String) articleRow.get("regDate")%></td>
-			<td><a href="detail?id=<%=(int) articleRow.get("id")%>"><%=(String) articleRow.get("title")%></a></td>
-			<td><%=(String) articleRow.get("memberName")%></td>
-			<td><a href="modify?id=<%=(int) articleRow.get("id")%>">수정</a> <a
-				href="delete?id=<%=(int) articleRow.get("id")%>">삭제</a></td>
+			<td><%=article.id%>번</td>
+			<td><%=article.regDate%></td>
+			<td><a href="detail?id=<%=article.id%>"><%=article.title%></a></td>
+			<td><%=article.memberName%></td>
+			<td><a href="modify?id=<%=article.id%>">수정</a> <a
+				href="delete?id=<%=article.id%>">삭제</a></td>
 		</tr>
 		<%
 		}
