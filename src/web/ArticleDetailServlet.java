@@ -12,15 +12,14 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import web.util.DBUtil;
 import web.util.SecSql;
 
 /**
  * Servlet implementation class ArticleListServlet
  */
-@WebServlet("/article/list")
-public class ArticleListServlet extends HttpServlet {
+@WebServlet("/article/detail")
+public class ArticleDetailServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -45,48 +44,16 @@ public class ArticleListServlet extends HttpServlet {
 
 		try {
 			con = DriverManager.getConnection(url, user, password);
-			
-			HttpSession session = request.getSession();
-			
-			int loginedMemberId = -1;
-
-			if (session.getAttribute("loginedMemberId") != null) {
-				loginedMemberId = (int) session.getAttribute("loginedMemberId");
-			}
-			
-			SecSql memberSql = new SecSql();
-			
-			memberSql.append("SELECT * FROM member WHERE id = ?", loginedMemberId);
-			Map<String, Object> memberRow = DBUtil.selectRow(con, memberSql);
-			
-			request.setAttribute("memberRow", memberRow);
 
 			SecSql sql = new SecSql();
+			
+			int id = Integer.parseInt(request.getParameter("id"));
 
-			sql.append("SELECT COUNT(*) FROM article");
-			int totalPageCnt = (int) DBUtil.selectRowIntValue(con, sql);
-			
-			int page = 1;
-			int countInPage = 10;
-			
-			totalPageCnt = (int) Math.ceil((double)totalPageCnt / countInPage);
-			
-			if (request.getParameter("page") != null) {
-				page = Integer.parseInt(request.getParameter("page"));
-			}
-			
-			int startPage = (page - 1) * countInPage;
-			
-			SecSql articleSql = new SecSql();
-			
-			articleSql.append("SELECT * FROM article LIMIT ?, ?", startPage, countInPage);
-			List<Map<String, Object>> articleRows = DBUtil.selectRows(con, articleSql);
-			
-			request.setAttribute("totalPageCnt", totalPageCnt);
-			request.setAttribute("page", page);
-			request.setAttribute("articleRows", articleRows);
-			
-			request.getRequestDispatcher("/jsp/article/list.jsp").forward(request, response);
+			sql.append("SELECT * FROM article WHERE id = ?", id);
+			Map<String, Object> articleRow = DBUtil.selectRow(con, sql);
+
+			request.setAttribute("articleRow", articleRow);
+			request.getRequestDispatcher("/jsp/article/detail.jsp").forward(request, response);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {

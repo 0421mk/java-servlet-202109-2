@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Map;
 
 import jakarta.servlet.ServletException;
@@ -12,18 +11,18 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import web.util.DBUtil;
 import web.util.SecSql;
 
 /**
  * Servlet implementation class ArticleListServlet
  */
-@WebServlet("/article/list")
-public class ArticleListServlet extends HttpServlet {
+@WebServlet("/member/doJoin")
+public class MemberDoJoinServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+
 		response.setContentType("text/html;charset=UTF-8");
 		// TODO Auto-generated method stub
 
@@ -31,7 +30,7 @@ public class ArticleListServlet extends HttpServlet {
 		String user = "root";
 		String password = "";
 		// 커넥터 드라이버 활성화
-		
+
 		String driverName = "com.mysql.jdbc.Driver";
 		try {
 			Class.forName(driverName);
@@ -45,48 +44,45 @@ public class ArticleListServlet extends HttpServlet {
 
 		try {
 			con = DriverManager.getConnection(url, user, password);
-			
-			HttpSession session = request.getSession();
-			
-			int loginedMemberId = -1;
 
-			if (session.getAttribute("loginedMemberId") != null) {
-				loginedMemberId = (int) session.getAttribute("loginedMemberId");
+			String loginId = request.getParameter("loginId");
+			String loginPw = request.getParameter("loginPw");
+			String loginPwConfirm = request.getParameter("loginPwConfirm");
+			String userName = request.getParameter("userName");
+
+			SecSql confirmSql = new SecSql();
+
+			confirmSql.append("SELECT COUNT(*) FROM member");
+			confirmSql.append("WHERE loginId = ?", loginId);
+
+			int selectCnt = DBUtil.selectRowIntValue(con, confirmSql);
+
+			if (selectCnt == 1) {
+				response.getWriter().append(String.format("<script>alert('이미 존재하는 아이디입니다.'); history.back();</script>"));
+
+				return;
 			}
 			
-			SecSql memberSql = new SecSql();
-			
-			memberSql.append("SELECT * FROM member WHERE id = ?", loginedMemberId);
-			Map<String, Object> memberRow = DBUtil.selectRow(con, memberSql);
-			
-			request.setAttribute("memberRow", memberRow);
+			if(loginPw.equals(loginPwConfirm) == false) {
+				response.getWriter().append(String.format("<script>alert('비밀번호를 확인해주세요.'); history.back();</script>"));
+
+				return;
+			}
 
 			SecSql sql = new SecSql();
 
-			sql.append("SELECT COUNT(*) FROM article");
-			int totalPageCnt = (int) DBUtil.selectRowIntValue(con, sql);
-			
-			int page = 1;
-			int countInPage = 10;
-			
-			totalPageCnt = (int) Math.ceil((double)totalPageCnt / countInPage);
-			
-			if (request.getParameter("page") != null) {
-				page = Integer.parseInt(request.getParameter("page"));
-			}
-			
-			int startPage = (page - 1) * countInPage;
-			
-			SecSql articleSql = new SecSql();
-			
-			articleSql.append("SELECT * FROM article LIMIT ?, ?", startPage, countInPage);
-			List<Map<String, Object>> articleRows = DBUtil.selectRows(con, articleSql);
-			
-			request.setAttribute("totalPageCnt", totalPageCnt);
-			request.setAttribute("page", page);
-			request.setAttribute("articleRows", articleRows);
-			
-			request.getRequestDispatcher("/jsp/article/list.jsp").forward(request, response);
+			sql.append("INSERT INTO member");
+			sql.append("SET regDate = NOW()");
+			sql.append(", loginId = ?", loginId);
+			sql.append(", loginPw = ?", loginPw);
+			sql.append(", userName = ?", userName);
+
+			DBUtil.insert(con, sql);
+
+			response.getWriter().append(String.format(
+					"<script>alert('회원가입에 성공하였습니다. 환영합니다! %s님!'); location.replace('../article/list');</script>",
+					userName));
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
@@ -98,6 +94,13 @@ public class ArticleListServlet extends HttpServlet {
 				}
 			}
 		}
+
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		doGet(request, response);
 	}
 
 }

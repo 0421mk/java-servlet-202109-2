@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -19,11 +17,12 @@ import web.util.SecSql;
 /**
  * Servlet implementation class ArticleListServlet
  */
-@WebServlet("/article/list")
-public class ArticleListServlet extends HttpServlet {
+@WebServlet("/article/delete")
+public class ArticleDeleteServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+
 		response.setContentType("text/html;charset=UTF-8");
 		// TODO Auto-generated method stub
 
@@ -31,7 +30,7 @@ public class ArticleListServlet extends HttpServlet {
 		String user = "root";
 		String password = "";
 		// 커넥터 드라이버 활성화
-		
+
 		String driverName = "com.mysql.jdbc.Driver";
 		try {
 			Class.forName(driverName);
@@ -45,48 +44,42 @@ public class ArticleListServlet extends HttpServlet {
 
 		try {
 			con = DriverManager.getConnection(url, user, password);
-			
+
 			HttpSession session = request.getSession();
-			
+
 			int loginedMemberId = -1;
 
-			if (session.getAttribute("loginedMemberId") != null) {
+			if (session.getAttribute("loginedMemberId") == null) {
+				response.getWriter().append(String.format("<script>alert('권한이 없습니다.'); history.back('');</script>"));
+
+				return;
+			} else {
 				loginedMemberId = (int) session.getAttribute("loginedMemberId");
 			}
+
+			int id = Integer.parseInt(request.getParameter("id"));
 			
 			SecSql memberSql = new SecSql();
 			
-			memberSql.append("SELECT * FROM member WHERE id = ?", loginedMemberId);
-			Map<String, Object> memberRow = DBUtil.selectRow(con, memberSql);
+			memberSql.append("SELECT COUNT(*) FROM article WHERE memberId = ?", loginedMemberId);
+			int memberCnt = DBUtil.selectRowIntValue(con, memberSql);
 			
-			request.setAttribute("memberRow", memberRow);
+			if ( memberCnt == 0 ) {
+				response.getWriter().append(String.format("<script>alert('권한이 없습니다.'); history.back('');</script>"));
 
-			SecSql sql = new SecSql();
-
-			sql.append("SELECT COUNT(*) FROM article");
-			int totalPageCnt = (int) DBUtil.selectRowIntValue(con, sql);
-			
-			int page = 1;
-			int countInPage = 10;
-			
-			totalPageCnt = (int) Math.ceil((double)totalPageCnt / countInPage);
-			
-			if (request.getParameter("page") != null) {
-				page = Integer.parseInt(request.getParameter("page"));
+				return;
 			}
 			
-			int startPage = (page - 1) * countInPage;
-			
-			SecSql articleSql = new SecSql();
-			
-			articleSql.append("SELECT * FROM article LIMIT ?, ?", startPage, countInPage);
-			List<Map<String, Object>> articleRows = DBUtil.selectRows(con, articleSql);
-			
-			request.setAttribute("totalPageCnt", totalPageCnt);
-			request.setAttribute("page", page);
-			request.setAttribute("articleRows", articleRows);
-			
-			request.getRequestDispatcher("/jsp/article/list.jsp").forward(request, response);
+			SecSql sql = new SecSql();
+
+			sql.append("DELETE FROM article");
+			sql.append("WHERE id = ?", id);
+
+			DBUtil.delete(con, sql);
+
+			response.getWriter()
+					.append(String.format("<script>alert('%d번글을 삭제하였습니다.'); location.replace('list');</script>", id));
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
@@ -98,6 +91,13 @@ public class ArticleListServlet extends HttpServlet {
 				}
 			}
 		}
+
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		doGet(request, response);
 	}
 
 }

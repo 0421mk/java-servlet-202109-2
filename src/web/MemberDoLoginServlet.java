@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Map;
 
 import jakarta.servlet.ServletException;
@@ -19,11 +18,12 @@ import web.util.SecSql;
 /**
  * Servlet implementation class ArticleListServlet
  */
-@WebServlet("/article/list")
-public class ArticleListServlet extends HttpServlet {
+@WebServlet("/member/doLogin")
+public class MemberDoLoginServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+
 		response.setContentType("text/html;charset=UTF-8");
 		// TODO Auto-generated method stub
 
@@ -31,7 +31,7 @@ public class ArticleListServlet extends HttpServlet {
 		String user = "root";
 		String password = "";
 		// 커넥터 드라이버 활성화
-		
+
 		String driverName = "com.mysql.jdbc.Driver";
 		try {
 			Class.forName(driverName);
@@ -45,48 +45,36 @@ public class ArticleListServlet extends HttpServlet {
 
 		try {
 			con = DriverManager.getConnection(url, user, password);
+
+			String loginId = request.getParameter("loginId");
+			String loginPw = request.getParameter("loginPw");
+
+			SecSql confirmSql = new SecSql();
+
+			confirmSql.append("SELECT * FROM member");
+			confirmSql.append("WHERE loginId = ?", loginId);
+
+			Map<String, Object> memberRow = DBUtil.selectRow(con, confirmSql);
+
+			if (memberRow.isEmpty()) {
+				response.getWriter().append(String.format("<script>alert('존재하지 않는 아이디입니다.'); history.back();</script>"));
+
+				return;
+			}
 			
+			if(memberRow.get("loginPw").equals(loginPw) == false) {
+				response.getWriter().append(String.format("<script>alert('비밀번호를 확인해주세요.'); history.back();</script>"));
+
+				return;
+			}
+
 			HttpSession session = request.getSession();
-			
-			int loginedMemberId = -1;
+			session.setAttribute("loginedMemberId", memberRow.get("id"));
 
-			if (session.getAttribute("loginedMemberId") != null) {
-				loginedMemberId = (int) session.getAttribute("loginedMemberId");
-			}
 			
-			SecSql memberSql = new SecSql();
-			
-			memberSql.append("SELECT * FROM member WHERE id = ?", loginedMemberId);
-			Map<String, Object> memberRow = DBUtil.selectRow(con, memberSql);
-			
-			request.setAttribute("memberRow", memberRow);
+			response.getWriter()
+			.append("<script>alert('로그인 성공'); location.replace('../article/list'); </script>");
 
-			SecSql sql = new SecSql();
-
-			sql.append("SELECT COUNT(*) FROM article");
-			int totalPageCnt = (int) DBUtil.selectRowIntValue(con, sql);
-			
-			int page = 1;
-			int countInPage = 10;
-			
-			totalPageCnt = (int) Math.ceil((double)totalPageCnt / countInPage);
-			
-			if (request.getParameter("page") != null) {
-				page = Integer.parseInt(request.getParameter("page"));
-			}
-			
-			int startPage = (page - 1) * countInPage;
-			
-			SecSql articleSql = new SecSql();
-			
-			articleSql.append("SELECT * FROM article LIMIT ?, ?", startPage, countInPage);
-			List<Map<String, Object>> articleRows = DBUtil.selectRows(con, articleSql);
-			
-			request.setAttribute("totalPageCnt", totalPageCnt);
-			request.setAttribute("page", page);
-			request.setAttribute("articleRows", articleRows);
-			
-			request.getRequestDispatcher("/jsp/article/list.jsp").forward(request, response);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
@@ -98,6 +86,13 @@ public class ArticleListServlet extends HttpServlet {
 				}
 			}
 		}
+
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		doGet(request, response);
 	}
 
 }
