@@ -49,5 +49,60 @@ public class ArticleDao {
 		
 		return articles;
 	}
+
+	public int insertIntoArticle(String title, String body, int memberId, String memberName) {
+		
+		SecSql sql = new SecSql();
+
+		sql.append("INSERT INTO article");
+		sql.append("SET regDate = NOW()");
+		sql.append(", title = ?", title);
+		sql.append(", body = ?", body);
+		sql.append(", memberId = ?", memberId);
+		sql.append(", memberName = ?", memberName);
+		
+		return DBUtil.insert(con, sql);
+		
+	}
+
+	public void updateArticle(String title, String body, int id, String memberName, int memberId) {
+	
+		SecSql sql = new SecSql();
+
+		sql.append("UPDATE article");
+		sql.append("SET regDate = NOW()");
+		sql.append(", title = ?", title);
+		sql.append(", body = ?", body);
+		sql.append(", memberName = ?", memberName);
+		sql.append(", memberId = ?", memberId);
+		sql.append("WHERE id = ?", id);
+		
+		DBUtil.update(con, sql);
+		
+	}
+
+	public Article getArticleById(int id) {
+
+		SecSql sql = new SecSql();
+		
+		sql.append("SELECT * FROM article WHERE id = ?", id);
+		Map<String, Object> articleRow = DBUtil.selectRow(con, sql);
+		
+		Article article = new Article(articleRow);
+		
+		return article;
+		
+	}
+
+	public void articleDeleteById(int id) {
+		
+		SecSql sql = new SecSql();
+
+		sql.append("DELETE FROM article");
+		sql.append("WHERE id = ?", id);
+
+		DBUtil.delete(con, sql);
+		
+	}
 	
 }

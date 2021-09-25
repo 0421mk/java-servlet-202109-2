@@ -1,4 +1,4 @@
-package web;
+package web.temp;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -16,8 +16,8 @@ import web.util.SecSql;
 /**
  * Servlet implementation class ArticleListServlet
  */
-@WebServlet("/article/doModify")
-public class ArticleDoModifyServlet extends HttpServlet {
+@WebServlet("/article/temp/doWrite")
+public class ArticleDoWriteServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -30,7 +30,7 @@ public class ArticleDoModifyServlet extends HttpServlet {
 		String password = "";
 		// 커넥터 드라이버 활성화
 
-		String driverName = "com.mysql.jdbc.Driver";
+		String driverName = "com.mysql.cj.jdbc.Driver";
 		try {
 			Class.forName(driverName);
 		} catch (ClassNotFoundException e) {
@@ -46,20 +46,22 @@ public class ArticleDoModifyServlet extends HttpServlet {
 
 			String title = request.getParameter("title");
 			String body = request.getParameter("body");
-			int id = Integer.parseInt(request.getParameter("id"));
+			int memberId = 1;
+			String memberName = "admin";
 
 			SecSql sql = new SecSql();
 
-			sql.append("UPDATE article");
+			sql.append("INSERT INTO article");
 			sql.append("SET regDate = NOW()");
 			sql.append(", title = ?", title);
 			sql.append(", body = ?", body);
-			sql.append("WHERE id = ?", id);
-
-			DBUtil.update(con, sql);
+			sql.append(", memberId = ?", memberId);
+			sql.append(", memberName = ?", memberName);
+			
+			int id = DBUtil.insert(con, sql);
 
 			response.getWriter()
-					.append(String.format("<script>alert('%d번글을 수정하였습니다.'); location.replace('list');</script>", id));
+					.append(String.format("<script>alert('%d번글을 작성하였습니다.'); location.replace('list');</script>", id));
 
 		} catch (SQLException e) {
 			e.printStackTrace();

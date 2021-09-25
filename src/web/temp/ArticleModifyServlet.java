@@ -1,4 +1,4 @@
-package web;
+package web.temp;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -19,11 +19,12 @@ import web.util.SecSql;
 /**
  * Servlet implementation class ArticleListServlet
  */
-@WebServlet("/article/temp/list")
-public class ArticleListServlet extends HttpServlet {
+@WebServlet("/article/temp/modify")
+public class ArticleModifyServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+
 		response.setContentType("text/html;charset=UTF-8");
 		// TODO Auto-generated method stub
 
@@ -31,7 +32,7 @@ public class ArticleListServlet extends HttpServlet {
 		String user = "root";
 		String password = "";
 		// 커넥터 드라이버 활성화
-		
+
 		String driverName = "com.mysql.jdbc.Driver";
 		try {
 			Class.forName(driverName);
@@ -50,43 +51,31 @@ public class ArticleListServlet extends HttpServlet {
 			
 			int loginedMemberId = -1;
 
-			if (session.getAttribute("loginedMemberId") != null) {
+			if (session.getAttribute("loginedMemberId") == null) {
+				response.getWriter().append(String.format(
+						"<script>alert('권한이 없습니다.'); history.back('');</script>"));
+				
+				return;
+			} else {
 				loginedMemberId = (int) session.getAttribute("loginedMemberId");
 			}
-			
-			SecSql memberSql = new SecSql();
-			
-			memberSql.append("SELECT * FROM member WHERE id = ?", loginedMemberId);
-			Map<String, Object> memberRow = DBUtil.selectRow(con, memberSql);
-			
-			request.setAttribute("memberRow", memberRow);
 
 			SecSql sql = new SecSql();
 
-			sql.append("SELECT COUNT(*) FROM article");
-			int totalPageCnt = (int) DBUtil.selectRowIntValue(con, sql);
+			int id = Integer.parseInt(request.getParameter("id"));
+
+			sql.append("SELECT * FROM article WHERE id = ?", id);
+			Map<String, Object> articleRow = DBUtil.selectRow(con, sql);
 			
-			int page = 1;
-			int countInPage = 10;
-			
-			totalPageCnt = (int) Math.ceil((double)totalPageCnt / countInPage);
-			
-			if (request.getParameter("page") != null) {
-				page = Integer.parseInt(request.getParameter("page"));
+			if ((int)articleRow.get("memberId") != loginedMemberId) {
+				response.getWriter().append(String.format(
+						"<script>alert('권한이 없습니다.'); history.back('');</script>"));
+				
+				return;
 			}
-			
-			int startPage = (page - 1) * countInPage;
-			
-			SecSql articleSql = new SecSql();
-			
-			articleSql.append("SELECT * FROM article LIMIT ?, ?", startPage, countInPage);
-			List<Map<String, Object>> articleRows = DBUtil.selectRows(con, articleSql);
-			
-			request.setAttribute("totalPageCnt", totalPageCnt);
-			request.setAttribute("page", page);
-			request.setAttribute("articleRows", articleRows);
-			
-			request.getRequestDispatcher("/jsp/article/list.jsp").forward(request, response);
+
+			request.setAttribute("articleRow", articleRow);
+			request.getRequestDispatcher("/jsp/article/modify.jsp").forward(request, response);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
@@ -98,6 +87,7 @@ public class ArticleListServlet extends HttpServlet {
 				}
 			}
 		}
+
 	}
 
 }

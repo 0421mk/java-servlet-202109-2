@@ -1,4 +1,4 @@
-package web;
+package web.temp;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -10,14 +10,15 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import web.util.DBUtil;
 import web.util.SecSql;
 
 /**
  * Servlet implementation class ArticleListServlet
  */
-@WebServlet("/article/doWrite")
-public class ArticleDoWriteServlet extends HttpServlet {
+@WebServlet("/article/temp/delete")
+public class ArticleDeleteServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -44,20 +45,40 @@ public class ArticleDoWriteServlet extends HttpServlet {
 		try {
 			con = DriverManager.getConnection(url, user, password);
 
-			String title = request.getParameter("title");
-			String body = request.getParameter("body");
+			HttpSession session = request.getSession();
 
+			int loginedMemberId = -1;
+
+			if (session.getAttribute("loginedMemberId") == null) {
+				response.getWriter().append(String.format("<script>alert('권한이 없습니다.'); history.back('');</script>"));
+
+				return;
+			} else {
+				loginedMemberId = (int) session.getAttribute("loginedMemberId");
+			}
+
+			int id = Integer.parseInt(request.getParameter("id"));
+			
+			SecSql memberSql = new SecSql();
+			
+			memberSql.append("SELECT COUNT(*) FROM article WHERE memberId = ?", loginedMemberId);
+			int memberCnt = DBUtil.selectRowIntValue(con, memberSql);
+			
+			if ( memberCnt == 0 ) {
+				response.getWriter().append(String.format("<script>alert('권한이 없습니다.'); history.back('');</script>"));
+
+				return;
+			}
+			
 			SecSql sql = new SecSql();
 
-			sql.append("INSERT INTO article");
-			sql.append("SET regDate = NOW()");
-			sql.append(", title = ?", title);
-			sql.append(", body = ?", body);
+			sql.append("DELETE FROM article");
+			sql.append("WHERE id = ?", id);
 
-			int id = DBUtil.insert(con, sql);
+			DBUtil.delete(con, sql);
 
 			response.getWriter()
-					.append(String.format("<script>alert('%d번글을 작성하였습니다.'); location.replace('list');</script>", id));
+					.append(String.format("<script>alert('%d번글을 삭제하였습니다.'); location.replace('list');</script>", id));
 
 		} catch (SQLException e) {
 			e.printStackTrace();

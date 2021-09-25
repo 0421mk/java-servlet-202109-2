@@ -1,7 +1,8 @@
 <%@ page import="java.util.List"%>
 <%@ page import="java.util.Map"%>
+<%@ page import="web.dto.Article"%>
 <%
-Map<String, Object> articleRow = (Map<String, Object>) request.getAttribute("articleRow");
+Article article = (Article) request.getAttribute("article");
 %>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
@@ -16,14 +17,14 @@ Map<String, Object> articleRow = (Map<String, Object>) request.getAttribute("art
 	<div>
 		<div>
 			<form action="doModify" method="POST">
-				<input type="hidden" value="<%=(int) articleRow.get("id")%>"
+				<input type="hidden" value="<%=(int) article.id%>"
 					name="id" />
 				<div>
 					<input type="text" name="title"
-						value="<%=(String) articleRow.get("title")%>" />
+						value="<%=(String) article.title%>" />
 				</div>
 				<div>
-					<textarea name="body" cols="30" rows="10"><%=(String) articleRow.get("body")%></textarea>
+					<textarea name="body" cols="30" rows="10"><%=(String) article.body%></textarea>
 				</div>
 				<input type="submit" value="수정하기" />
 			</form>

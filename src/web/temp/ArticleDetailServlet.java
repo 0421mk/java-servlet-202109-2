@@ -1,4 +1,4 @@
-package web;
+package web.temp;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -12,19 +12,17 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import web.util.DBUtil;
 import web.util.SecSql;
 
 /**
  * Servlet implementation class ArticleListServlet
  */
-@WebServlet("/article/modify")
-public class ArticleModifyServlet extends HttpServlet {
+@WebServlet("/article/temp/detail")
+public class ArticleDetailServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-
 		response.setContentType("text/html;charset=UTF-8");
 		// TODO Auto-generated method stub
 
@@ -32,7 +30,7 @@ public class ArticleModifyServlet extends HttpServlet {
 		String user = "root";
 		String password = "";
 		// 커넥터 드라이버 활성화
-
+		
 		String driverName = "com.mysql.jdbc.Driver";
 		try {
 			Class.forName(driverName);
@@ -46,36 +44,16 @@ public class ArticleModifyServlet extends HttpServlet {
 
 		try {
 			con = DriverManager.getConnection(url, user, password);
-			
-			HttpSession session = request.getSession();
-			
-			int loginedMemberId = -1;
-
-			if (session.getAttribute("loginedMemberId") == null) {
-				response.getWriter().append(String.format(
-						"<script>alert('권한이 없습니다.'); history.back('');</script>"));
-				
-				return;
-			} else {
-				loginedMemberId = (int) session.getAttribute("loginedMemberId");
-			}
 
 			SecSql sql = new SecSql();
-
+			
 			int id = Integer.parseInt(request.getParameter("id"));
 
 			sql.append("SELECT * FROM article WHERE id = ?", id);
 			Map<String, Object> articleRow = DBUtil.selectRow(con, sql);
-			
-			if ((int)articleRow.get("memberId") != loginedMemberId) {
-				response.getWriter().append(String.format(
-						"<script>alert('권한이 없습니다.'); history.back('');</script>"));
-				
-				return;
-			}
 
 			request.setAttribute("articleRow", articleRow);
-			request.getRequestDispatcher("/jsp/article/modify.jsp").forward(request, response);
+			request.getRequestDispatcher("/jsp/article/detail.jsp").forward(request, response);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
@@ -87,7 +65,6 @@ public class ArticleModifyServlet extends HttpServlet {
 				}
 			}
 		}
-
 	}
 
 }

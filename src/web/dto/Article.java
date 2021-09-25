@@ -15,7 +15,7 @@ public class Article {
 		this.regDate = (String)row.get("regDate");
 		this.title = (String)row.get("title");
 		this.body = (String)row.get("body");
-		this.memberId = (int)row.get("id");
+		this.memberId = (int)row.get("memberId");
 		this.memberName = (String)row.get("memberName");
 	}
 }

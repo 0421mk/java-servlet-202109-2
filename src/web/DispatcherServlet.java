@@ -17,17 +17,18 @@ import web.controller.ArticleController;
 import web.util.DBUtil;
 import web.util.SecSql;
 
-@WebServlet(urlPatterns={"/article/*", "/member/*"})
+@WebServlet(urlPatterns = { "/article/*", "/member/*" })
 public class DispatcherServlet extends HttpServlet {
 
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+
 		response.setContentType("text/html;charset=UTF-8");
 		// TODO Auto-generated method stub
-		
+
 		String requestUri = request.getRequestURI();
 		String[] requestUriBits = requestUri.split("/");
-		
+
 		String controllerName = requestUriBits[2];
 		String actionMethod = requestUriBits[3];
 
@@ -35,7 +36,7 @@ public class DispatcherServlet extends HttpServlet {
 		String user = "root";
 		String password = "";
 		// 커넥터 드라이버 활성화
-		
+
 		String driverName = "com.mysql.jdbc.Driver";
 		try {
 			Class.forName(driverName);
@@ -49,32 +50,65 @@ public class DispatcherServlet extends HttpServlet {
 
 		try {
 			con = DriverManager.getConnection(url, user, password);
-			
+
 			HttpSession session = request.getSession();
-			
+
 			boolean isLogined = false;
 			int loginedMemberId = -1;
 			Map<String, Object> memberRow = null;
 
+			// 로그인 되어있다면
 			if (session.getAttribute("loginedMemberId") != null) {
 				loginedMemberId = (int) session.getAttribute("loginedMemberId");
 				isLogined = true;
-				
+
 				SecSql memberSql = new SecSql();
-				
+
 				memberSql.append("SELECT * FROM member WHERE id = ?", loginedMemberId);
 				memberRow = DBUtil.selectRow(con, memberSql);
 			}
-			
+
 			request.setAttribute("isLogined", isLogined);
-			request.setAttribute("loginedMemberId",loginedMemberId);
+			request.setAttribute("loginedMemberId", loginedMemberId);
 			request.setAttribute("memberRow", memberRow);
-			
-			if(controllerName.equals("article")) {
+
+			if (controllerName.equals("article")) {
 				ArticleController controller = new ArticleController(request, response, con);
-				
-				if(actionMethod.equals("list")) {
+
+				if (actionMethod.equals("list")) {
 					controller.actionList();
+				}
+				
+				if (actionMethod.equals("detail")) {
+					controller.pageDetail();
+				}
+
+				if (isLogined == false) {
+					response.getWriter()
+					.append("<script>alert('권한이 없습니다.'); location.replace('list');</script>");
+					return;
+					
+				} else {
+					if (actionMethod.equals("write")) {
+						controller.pageWrite();
+					}
+
+					if (actionMethod.equals("doWrite")) {
+						controller.doWrite(memberRow);
+					}
+					
+					if (actionMethod.equals("modify")) {
+						controller.pageModify(loginedMemberId);
+					}
+					
+					if (actionMethod.equals("doModify")) {
+						controller.doModify(memberRow);
+					}
+					
+					if (actionMethod.equals("delete")) {
+						controller.delete(loginedMemberId);
+					}
+					
 				}
 			}
 
@@ -89,10 +123,11 @@ public class DispatcherServlet extends HttpServlet {
 				}
 			}
 		}
-		
+
 	}
 
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		doGet(request, response);
 	}
