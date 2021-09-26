@@ -45,13 +45,25 @@ public class ArticleController {
 
 	}
 
-	public void pageWrite() throws ServletException, IOException {
+	public void pageWrite(boolean isLogined) throws ServletException, IOException {
+		
+		if (isLogined == false) {
+			response.getWriter()
+			.append("<script>alert('권한이 없습니다.'); location.replace('list');</script>");
+			return;
+		}
 
 		request.getRequestDispatcher("/jsp/article/write.jsp").forward(request, response);
 
 	}
 
-	public void doWrite(Map<String, Object> memberRow) throws IOException {
+	public void doWrite(Map<String, Object> memberRow, boolean isLogined) throws IOException {
+		
+		if (isLogined == false) {
+			response.getWriter()
+			.append("<script>alert('권한이 없습니다.'); location.replace('list');</script>");
+			return;
+		}
 
 		String title = request.getParameter("title");
 		String body = request.getParameter("body");
@@ -65,7 +77,13 @@ public class ArticleController {
 
 	}
 
-	public void pageModify(int loginedMemberId) throws ServletException, IOException {
+	public void pageModify(int loginedMemberId, boolean isLogined) throws ServletException, IOException {
+		
+		if (isLogined == false) {
+			response.getWriter()
+			.append("<script>alert('권한이 없습니다.'); location.replace('list');</script>");
+			return;
+		}
 
 		int id = Integer.parseInt(request.getParameter("id"));
 
@@ -82,7 +100,13 @@ public class ArticleController {
 
 	}
 
-	public void doModify(Map<String, Object> memberRow) throws IOException {
+	public void doModify(Map<String, Object> memberRow, boolean isLogined) throws IOException {
+		
+		if (isLogined == false) {
+			response.getWriter()
+			.append("<script>alert('권한이 없습니다.'); location.replace('list');</script>");
+			return;
+		}
 
 		String title = request.getParameter("title");
 		String body = request.getParameter("body");
@@ -97,7 +121,13 @@ public class ArticleController {
 
 	}
 
-	public void delete(int loginedMemberId) throws IOException {
+	public void delete(int loginedMemberId, boolean isLogined) throws IOException {
+		
+		if (isLogined == false) {
+			response.getWriter()
+			.append("<script>alert('권한이 없습니다.'); location.replace('list');</script>");
+			return;
+		}
 
 		int id = Integer.parseInt(request.getParameter("id"));
 

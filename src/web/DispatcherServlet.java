@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Map;
 
 import jakarta.servlet.ServletException;
@@ -14,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import web.controller.ArticleController;
+import web.controller.MemberController;
 import web.util.DBUtil;
 import web.util.SecSql;
 
@@ -82,36 +82,52 @@ public class DispatcherServlet extends HttpServlet {
 				if (actionMethod.equals("detail")) {
 					controller.pageDetail();
 				}
+				
+				if (actionMethod.equals("write")) {
+					controller.pageWrite(isLogined);
+				}
 
-				if (isLogined == false) {
-					response.getWriter()
-					.append("<script>alert('권한이 없습니다.'); location.replace('list');</script>");
-					return;
-					
-				} else {
-					if (actionMethod.equals("write")) {
-						controller.pageWrite();
-					}
-
-					if (actionMethod.equals("doWrite")) {
-						controller.doWrite(memberRow);
-					}
-					
-					if (actionMethod.equals("modify")) {
-						controller.pageModify(loginedMemberId);
-					}
-					
-					if (actionMethod.equals("doModify")) {
-						controller.doModify(memberRow);
-					}
-					
-					if (actionMethod.equals("delete")) {
-						controller.delete(loginedMemberId);
-					}
-					
+				if (actionMethod.equals("doWrite")) {
+					controller.doWrite(memberRow, isLogined);
+				}
+				
+				if (actionMethod.equals("modify")) {
+					controller.pageModify(loginedMemberId, isLogined);
+				}
+				
+				if (actionMethod.equals("doModify")) {
+					controller.doModify(memberRow, isLogined);
+				}
+				
+				if (actionMethod.equals("delete")) {
+					controller.delete(loginedMemberId, isLogined);
 				}
 			}
-
+			
+			if (controllerName.equals("member")) {
+				MemberController controller = new MemberController(request, response, con);
+				
+				if (actionMethod.equals("logout")) {
+					controller.logout(isLogined);
+				}
+				
+				if (actionMethod.equals("join")) {
+					controller.pageJoin(isLogined);
+				}
+				
+				if (actionMethod.equals("doJoin")) {
+					controller.doJoin(isLogined);
+				}
+				
+				if (actionMethod.equals("login")) {
+					controller.pageLogin(isLogined);
+				}
+				
+				if (actionMethod.equals("doLogin")) {
+					controller.doLogin(isLogined);
+				}
+			}
+				
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {

@@ -1,4 +1,4 @@
-package web;
+package web.temp;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -18,7 +18,7 @@ import web.util.SecSql;
 /**
  * Servlet implementation class ArticleListServlet
  */
-@WebServlet("/member/doLogin")
+@WebServlet("/member/temp/doLogin")
 public class MemberDoLoginServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)

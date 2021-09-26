@@ -1,4 +1,4 @@
-package web;
+package web.temp;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -18,13 +18,13 @@ import web.util.SecSql;
 /**
  * Servlet implementation class ArticleListServlet
  */
-@WebServlet("/member/join")
-public class MemberJoinServlet extends HttpServlet {
+@WebServlet("/member/temp/login")
+public class MemberLoginServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
-		request.getRequestDispatcher("/jsp/member/join.jsp").forward(request, response);
+		request.getRequestDispatcher("/jsp/member/login.jsp").forward(request, response);
 
 	}
 
