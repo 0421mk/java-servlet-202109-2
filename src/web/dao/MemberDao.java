@@ -58,16 +58,10 @@ public class MemberDao {
 
 		Map<String, Object> memberRow = DBUtil.selectRow(con, confirmSql);
 		
-		if(memberRow == null) {
-			System.out.println("null 존재");
-		} else {
-			System.out.println("null 존재하지않음");
-		}
-		//null 존재하지않음, 널값이 아닌듯 memberRow에서 값이없으면
-		
+		//처음 null로 선언
 		Member member = null;
 		
-		// null pointer exception
+		// null pointer exception 방지
 		if(memberRow != null) {
 			member = new Member(memberRow);
 		}
